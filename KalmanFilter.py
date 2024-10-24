@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import math
+from scipy.linalg import ldl
 
 # 1. Load the CSV file
 df = pd.read_csv('User1_Pre2.csv', delimiter=',')
@@ -29,10 +30,6 @@ def series_taylor(dt, n=2):
     for i in range(1, n + 1):
         F += (dt ** i) / math.factorial(i) * np.array([[0, 1, 0], [-1, 0, 0], [0, 0, 1]]) ** i
     return F
-
-def LDLT_decomposition(P):
-    """LDLT decomposition to convert covariance matrix P to square root form."""
-    return np.linalg.cholesky(P)
 
 def givens_rotation(F, Q, S):
     """Apply Givens rotation to the covariance matrix S."""
@@ -88,7 +85,8 @@ def potterAlg(S_p, H, R, ensemble, y_t):
 
 def EnKF(dt, ensemble, P_0, H, R, y, n_steps):
     """Ensemble Kalman Filter implementation."""
-    S_t = LDLT_decomposition(P_0)
+    L, D, perm = ldl(P_0)
+    S_t = L @ np.diag(np.sqrt(np.diag(D)))
     
     for step in range(n_steps):
         # 1. Calculate the transition matrix F
